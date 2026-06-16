@@ -94,8 +94,7 @@ export default function Display() {
     );
   }
 
-  const backendBaseUrl = `http://${window.location.hostname}:3000`;
-  const mediaSrc = media.filepath.startsWith('http') ? media.filepath : `${backendBaseUrl}${media.filepath}`;
+  const mediaSrc = media.filepath.startsWith('http') ? media.filepath : `${import.meta.env.VITE_API_BASE_URL}${media.filepath}`;
 
   return (
     <div className="w-screen h-screen bg-black overflow-hidden flex items-center justify-center">
