@@ -17,7 +17,7 @@ export default function Media() {
 
   const fetchMedia = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/media');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/media`);
       const data = await res.json();
       setMediaItems(data);
     } catch (err) {
@@ -41,7 +41,7 @@ export default function Media() {
       const formData = new FormData();
       formData.append('file', file);
       
-      await fetch('http://localhost:3000/api/media', {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/media`, {
         method: 'POST',
         body: formData,
       });
@@ -101,9 +101,9 @@ export default function Media() {
               <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
                 <div className="aspect-video bg-black flex items-center justify-center overflow-hidden">
                   {item.type === 'video' ? (
-                    <video src={`http://localhost:3000${item.filepath}`} className="w-full h-full object-cover" preload="metadata" muted />
+                    <video src={`${import.meta.env.VITE_API_BASE_URL}${item.filepath}`} className="w-full h-full object-cover" preload="metadata" muted />
                   ) : (
-                    <img src={`http://localhost:3000${item.filepath}`} alt={item.filename} className="w-full h-full object-cover" />
+                    <img src={`${import.meta.env.VITE_API_BASE_URL}${item.filepath}`} alt={item.filename} className="w-full h-full object-cover" />
                   )}
                 </div>
                 <div className="p-4 border-t border-gray-100">

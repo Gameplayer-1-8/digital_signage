@@ -9,7 +9,7 @@ export default function BrowserDisplay() {
     if (!uuid) {
       const registerDevice = async () => {
         try {
-          const res = await fetch(`http://${window.location.hostname}:3000/api/devices/register`, {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/devices/register`, {
             method: 'POST'
           });
           if (res.ok) {

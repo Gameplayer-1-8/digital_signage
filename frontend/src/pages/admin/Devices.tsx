@@ -23,8 +23,8 @@ export default function Devices() {
   const fetchData = async () => {
     try {
       const [devRes, mediaRes] = await Promise.all([
-        fetch('http://localhost:3000/api/devices'),
-        fetch('http://localhost:3000/api/media')
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/devices`),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/media`)
       ]);
       const [devData, mediaData] = await Promise.all([devRes.json(), mediaRes.json()]);
       setDevices(devData);
@@ -45,7 +45,7 @@ export default function Devices() {
     if (!name) return;
     const location = prompt('Standort (optional):');
     
-    await fetch('http://localhost:3000/api/devices', {
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/devices`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, location })
@@ -55,12 +55,12 @@ export default function Devices() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('Wirklich löschen?')) return;
-    await fetch(`http://localhost:3000/api/devices/${id}`, { method: 'DELETE' });
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/devices/${id}`, { method: 'DELETE' });
     fetchData();
   };
 
   const handleMediaChange = async (deviceId: number, mediaId: string) => {
-    await fetch(`http://localhost:3000/api/devices/${deviceId}/media`, {
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/devices/${deviceId}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mediaId: mediaId === '' ? null : parseInt(mediaId) })

@@ -16,7 +16,7 @@ export default function Display() {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const res = await fetch(`http://${window.location.hostname}:3000/api/devices/${deviceId}/media`);
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/devices/${deviceId}/media`);
         if (res.ok) {
           const data = await res.json();
           setMedia(data);
@@ -37,7 +37,7 @@ export default function Display() {
     let pingInterval: ReturnType<typeof setInterval>;
 
     const connectWs = () => {
-      ws = new WebSocket(`ws://${window.location.hostname}:3000/api/ws`);
+      ws = new WebSocket(`${import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws')}/api/ws`);
 
       ws.onopen = () => {
         console.log('WebSocket connected');

@@ -23,8 +23,8 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const [devRes, mediaRes] = await Promise.all([
-          fetch('http://localhost:3000/api/devices'),
-          fetch('http://localhost:3000/api/media')
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/devices`),
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/media`)
         ]);
         const [devData, mediaData] = await Promise.all([devRes.json(), mediaRes.json()]);
         setDevices(devData);
