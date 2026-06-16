@@ -1,4 +1,4 @@
-FROM node:22-alpine3.19 AS builder
+FROM node:22-slim AS builder
 
 RUN npm install -g pnpm
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY backend ./backend
 # Baue das Backend
 RUN cd backend && pnpm build
 
-FROM node:22-alpine3.19 AS runner
+FROM node:22-slim AS runner
 
 WORKDIR /app
 
