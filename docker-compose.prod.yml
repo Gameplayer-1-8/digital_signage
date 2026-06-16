@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: signage-backend
+    restart: always
+    environment:
+      # Diese Werte können über eine externe .env-Datei für Docker gesteuert werden
+      # oder beim Ausführen des Containers gesetzt werden.
+      - DB_HOST=${DB_HOST:-127.0.0.1}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_USER=${DB_USER:-signage_user}
+      - DB_PASSWORD=${DB_PASSWORD:-signage_password}
+      - DB_NAME=${DB_NAME:-digital_signage}
+    # Port wird nicht nach außen exponiert, da Nginx als Proxy dient
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: signage-frontend
+    restart: always
+    ports:
+      - '80:80'
+    depends_on:
+      - backend

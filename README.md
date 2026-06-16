@@ -61,3 +61,13 @@ Die fertig kompilierte Datei liegt danach unter `android\app\build\outputs\apk\r
 - **Server:** mariadb
 - **Benutzer:** signage_user (oder root)
 - **Passwort:** signage_password (oder root)
+
+## Produktion Deployment (Docker)
+
+Für das finale Deployment auf einem Server existiert eine separate Docker-Compose Konfiguration, die das Backend und das Frontend (inkl. Nginx-Proxy) vollständig baut und bereitstellt. Eine Datenbank wird in diesem Setup extern vorausgesetzt.
+
+```bash
+# Baue und starte die Container im Hintergrund
+DB_HOST=deine-db-ip DB_PASSWORD=dein-passwort docker-compose -f docker-compose.prod.yml up -d --build
+```
+Das Frontend ist dann auf Port 80 erreichbar. Die API und WebSockets werden automatisch vom Nginx an das Backend weitergeleitet.
