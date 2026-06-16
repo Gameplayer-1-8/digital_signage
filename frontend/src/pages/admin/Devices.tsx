@@ -38,6 +38,17 @@ export default function Devices() {
 
   useEffect(() => {
     fetchData();
+
+    const interval = setInterval(fetchData, 10000);
+    const sse = new EventSource(`${import.meta.env.VITE_API_BASE_URL}/api/sse`);
+    sse.addEventListener('device-update', () => {
+      fetchData();
+    });
+
+    return () => {
+      clearInterval(interval);
+      sse.close();
+    };
   }, []);
 
   const handleAdd = async () => {

@@ -2,6 +2,7 @@ import { db } from '../../database';
 import { devices } from '../../database/schema';
 import { eq } from 'drizzle-orm';
 import { activePeers } from '../../utils/wsState';
+import { broadcastSSE } from '../../utils/sse';
 
 const peerToUuid = new Map<string, string>();
 
@@ -23,6 +24,7 @@ export default defineWebSocketHandler({
           .set({ isOnline: true, lastPing: new Date() })
           .where(eq(devices.uuid, data.uuid));
         console.log(`[ws] Device registered: ${data.uuid}`);
+        broadcastSSE('device-update', { uuid: data.uuid, isOnline: true });
       } 
 
       else if (data.type === 'ping') {
@@ -50,6 +52,7 @@ export default defineWebSocketHandler({
           .set({ isOnline: false })
           .where(eq(devices.uuid, uuid));
         console.log(`[ws] Device marked offline: ${uuid}`);
+        broadcastSSE('device-update', { uuid, isOnline: false });
       }
     } catch (e) {
       console.error('[ws] Error in close handler:', e);

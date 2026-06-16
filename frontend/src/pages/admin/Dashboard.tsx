@@ -38,7 +38,16 @@ export default function Dashboard() {
     fetchData();
     // Refresh every 10 seconds to keep stats updated
     const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
+
+    const sse = new EventSource(`${import.meta.env.VITE_API_BASE_URL}/api/sse`);
+    sse.addEventListener('device-update', () => {
+      fetchData();
+    });
+
+    return () => {
+      clearInterval(interval);
+      sse.close();
+    };
   }, []);
 
   const onlineDevices = devices.filter(d => d.isOnline).length;
