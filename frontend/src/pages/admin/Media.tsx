@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Upload, FileImage, FileVideo } from 'lucide-react';
+import { Upload } from 'lucide-react';
 
 interface MediaItem {
   id: number;

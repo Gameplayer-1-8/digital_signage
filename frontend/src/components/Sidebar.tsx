@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Monitor, Image as ImageIcon, LayoutDashboard, Settings, ListVideo } from 'lucide-react';
+import { Monitor, Image as ImageIcon, LayoutDashboard, Settings } from 'lucide-react';
 
 export default function Sidebar() {
   const location = useLocation();
