@@ -16,7 +16,7 @@ export default function Display() {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/devices/${deviceId}/media`);
+        const res = await fetch(`/api/devices/${deviceId}/media`);
         if (res.ok) {
           const data = await res.json();
           setMedia(data);
