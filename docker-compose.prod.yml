@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     container_name: signage-backend
+    network_mode: "host"
     restart: always
     environment:
       # Diese Werte können über eine externe .env-Datei für Docker gesteuert werden
@@ -20,9 +21,8 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
     container_name: signage-frontend
+    network_mode: "host"
     restart: always
-    ports:
-      - '80:80'
     depends_on:
       - backend
 
