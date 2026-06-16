@@ -40,15 +40,19 @@ export default defineWebSocketHandler({
   },
 
   async close(peer, event) {
-    console.log('[ws] Peer disconnected', peer.id);
-    const uuid = peerToUuid.get(peer.id);
-    if (uuid) {
-      peerToUuid.delete(peer.id);
-      activePeers.delete(uuid);
-      await db.update(devices)
-        .set({ isOnline: false })
-        .where(eq(devices.uuid, uuid));
-      console.log(`[ws] Device marked offline: ${uuid}`);
+    try {
+      console.log('[ws] Peer disconnected', peer.id);
+      const uuid = peerToUuid.get(peer.id);
+      if (uuid) {
+        peerToUuid.delete(peer.id);
+        activePeers.delete(uuid);
+        await db.update(devices)
+          .set({ isOnline: false })
+          .where(eq(devices.uuid, uuid));
+        console.log(`[ws] Device marked offline: ${uuid}`);
+      }
+    } catch (e) {
+      console.error('[ws] Error in close handler:', e);
     }
   },
 
