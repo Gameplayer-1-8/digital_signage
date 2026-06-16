@@ -5,7 +5,7 @@
     "build": "nitro build",
     "dev": "nitro dev --host",
     "preview": "node .output/server/index.mjs",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push:mysql"
   },
   "dependencies": {
     "drizzle-orm": "^0.30.0",
