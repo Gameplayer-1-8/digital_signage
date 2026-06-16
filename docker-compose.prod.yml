@@ -25,3 +25,18 @@ services:
       - '80:80'
     depends_on:
       - backend
+
+  db-migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: builder
+    profiles:
+      - tools
+    environment:
+      - DB_HOST=${DB_HOST:-127.0.0.1}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_USER=${DB_USER:-signage_user}
+      - DB_PASSWORD=${DB_PASSWORD:-signage_password}
+      - DB_NAME=${DB_NAME:-digital_signage}
+    command: sh -c "cd backend && pnpm db:push"
