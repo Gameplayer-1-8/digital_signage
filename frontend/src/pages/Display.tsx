@@ -87,7 +87,7 @@ export default function Display() {
   if (!media) {
     return (
       <div className="w-screen h-screen flex flex-col items-center justify-center bg-black text-white">
-        <h1 className="text-3xl font-bold mb-4">Digital Signage</h1>
+        <img src="/logo.jpg" alt="Logo" className="w-64 mb-6 object-contain" />
         <p className="text-gray-400">Kein Medium zugewiesen.</p>
         <p className="text-gray-600 mt-2 text-sm">Device ID: {deviceId}</p>
       </div>

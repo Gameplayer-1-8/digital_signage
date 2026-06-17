@@ -5,17 +5,20 @@
     "version": "1.0.0",
     "runtimeVersion": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon.jpg",
+    "splash": {
+      "image": "./assets/logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/icon.jpg"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.androidclient",

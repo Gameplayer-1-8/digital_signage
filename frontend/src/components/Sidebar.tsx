@@ -13,11 +13,8 @@ export default function Sidebar() {
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col shadow-sm">
-      <div className="p-6 border-b border-gray-100 flex items-center space-x-3">
-        <div className="w-8 h-8 bg-corporate-blue rounded flex items-center justify-center text-white font-bold">
-          DS
-        </div>
-        <span className="text-xl font-bold text-corporate-dark">SignagePro</span>
+      <div className="p-6 border-b border-gray-100 flex items-center justify-center">
+        <img src="/logo.jpg" alt="Logo" className="max-h-16 object-contain" />
       </div>
       <nav className="flex-1 p-4 space-y-1">
         {links.map((link) => {
