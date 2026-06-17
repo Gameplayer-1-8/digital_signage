@@ -41,7 +41,7 @@ jobs:
 
       - name: Resolve app version
         id: app_version
-        run: echo "value=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Generate Android project
         run: CI=1 npx expo prebuild --platform android
