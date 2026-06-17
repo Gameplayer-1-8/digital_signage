@@ -65,8 +65,13 @@ export default function Display() {
         pingInterval = setInterval(() => {
           if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'ping', uuid: deviceId }));
+          } else {
+            console.log('WebSocket seems closed during ping, forcing reconnect...');
+            clearInterval(pingInterval);
+            ws?.close();
+            setTimeout(connectWs, 5000);
           }
-        }, 15000); // Ping every 15 seconds
+        }, 10000); // Ping every 10 seconds
       };
 
       ws.onmessage = (event) => {
@@ -89,6 +94,11 @@ export default function Display() {
         } catch (e) {
           console.error('Failed to parse WebSocket message', e);
         }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        ws?.close(); // Trigger onclose
       };
 
       ws.onclose = () => {
