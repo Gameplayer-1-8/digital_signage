@@ -127,6 +127,10 @@ export default function App() {
           const data = JSON.parse(e.data);
           if (data.type === 'reload') {
             webviewRef.current?.reload();
+          } else if (data.type === 'invalid_device') {
+            AsyncStorage.removeItem('DEVICE_UUID').then(() => {
+              setServerUrl(null);
+            });
           }
         } catch (err) {}
       };
@@ -263,6 +267,16 @@ export default function App() {
         source={{ uri: serverUrl }} 
         style={{ flex: 1 }}
         cacheEnabled={false}
+        onMessage={(event) => {
+          try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (data.type === 'invalid_device') {
+              AsyncStorage.removeItem('DEVICE_UUID').then(() => {
+                setServerUrl(null);
+              });
+            }
+          } catch(e) {}
+        }}
       />
     </View>
   );

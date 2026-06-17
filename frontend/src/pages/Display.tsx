@@ -20,6 +20,16 @@ export default function Display() {
         if (res.ok) {
           const data = await res.json();
           setMedia(data);
+        } else if (res.status === 404) {
+          console.warn('Device not found. Re-registering.');
+          // @ts-ignore
+          if (window.ReactNativeWebView) {
+            // @ts-ignore
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'invalid_device' }));
+          } else {
+            localStorage.removeItem('signage_device_uuid');
+            window.location.href = '/display/browser';
+          }
         } else {
           setMedia(null);
         }
@@ -37,7 +47,8 @@ export default function Display() {
     let pingInterval: ReturnType<typeof setInterval>;
 
     const connectWs = () => {
-      ws = new WebSocket(`${import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws')}/api/ws`);
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${window.location.host}/api/ws`);
 
       ws.onopen = () => {
         console.log('WebSocket connected');
@@ -56,6 +67,16 @@ export default function Display() {
           if (data.type === 'reload') {
             console.log('Received reload signal, fetching new media...');
             fetchMedia();
+          } else if (data.type === 'invalid_device') {
+            console.warn('Device invalid or deleted. Re-registering.');
+            // @ts-ignore
+            if (window.ReactNativeWebView) {
+              // @ts-ignore
+              window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'invalid_device' }));
+            } else {
+              localStorage.removeItem('signage_device_uuid');
+              window.location.href = '/display/browser';
+            }
           }
         } catch (e) {
           console.error('Failed to parse WebSocket message', e);
@@ -94,7 +115,7 @@ export default function Display() {
     );
   }
 
-  const mediaSrc = media.filepath.startsWith('http') ? media.filepath : `${import.meta.env.VITE_API_BASE_URL}${media.filepath}`;
+  const mediaSrc = media.filepath;
 
   return (
     <div className="w-screen h-screen bg-black overflow-hidden flex items-center justify-center">

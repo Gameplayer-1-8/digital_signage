@@ -43,7 +43,7 @@ export default defineNitroPlugin((nitroApp) => {
     // Broadcast every 10 seconds
     setInterval(() => {
       const publicPort = process.env.PUBLIC_PORT || '5173';
-      const apiPort = process.env.PUBLIC_API_PORT || '3000';
+      const apiPort = process.env.PUBLIC_API_PORT || '3001';
       const message = Buffer.from(`SIGNAGE_DISCOVERY:PORT:${publicPort}:API:${apiPort}`);
       const broadcastAddrs = getBroadcastAddresses();
       

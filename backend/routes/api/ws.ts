@@ -16,6 +16,13 @@ export default defineWebSocketHandler({
       const data = JSON.parse(message.text());
       
       if (data.type === 'register' && data.uuid) {
+        const deviceRecords = await db.select().from(devices).where(eq(devices.uuid, data.uuid));
+        if (deviceRecords.length === 0) {
+          peer.send(JSON.stringify({ type: 'invalid_device' }));
+          peer.close();
+          return;
+        }
+
         peerToUuid.set(peer.id, data.uuid);
         activePeers.set(data.uuid, peer);
         
@@ -30,6 +37,13 @@ export default defineWebSocketHandler({
       else if (data.type === 'ping') {
         const uuid = data.uuid || peerToUuid.get(peer.id);
         if (uuid) {
+          const deviceRecords = await db.select().from(devices).where(eq(devices.uuid, uuid));
+          if (deviceRecords.length === 0) {
+            peer.send(JSON.stringify({ type: 'invalid_device' }));
+            peer.close();
+            return;
+          }
+
           // Update ping timestamp
           await db.update(devices)
             .set({ isOnline: true, lastPing: new Date() })
