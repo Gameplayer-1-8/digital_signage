@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Monitor, Plus, Trash2, Edit2, Play, Image as ImageIcon, Check, X } from 'lucide-react';
+import { Monitor, Plus, Trash2, Edit2, Play, Image as ImageIcon, Check, X, ChevronDown } from 'lucide-react';
 import Modal from '../../components/Modal';
 
 interface Device {
@@ -208,17 +208,22 @@ export default function Devices() {
                               <ImageIcon size={16} />
                             </div>
                           )}
-                          <select 
-                            className="bg-white border border-gray-300 text-gray-700 rounded-md py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-corporate-blue focus:border-transparent text-sm w-48"
-                            value={device.activeMediaId || ''}
-                            onChange={(e) => handleMediaChange(device.id, e.target.value)}
-                            disabled={isEditing}
-                          >
-                            <option value="">Keine Zuweisung</option>
-                            {mediaItems.map(m => (
-                              <option key={m.id} value={m.id}>{m.filename}</option>
-                            ))}
-                          </select>
+                          <div className="relative">
+                            <select 
+                              className="bg-white border border-gray-300 text-gray-800 rounded-md py-1.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-corporate-blue focus:border-transparent text-sm w-48 appearance-none"
+                              value={device.activeMediaId || ''}
+                              onChange={(e) => handleMediaChange(device.id, e.target.value)}
+                              disabled={isEditing}
+                            >
+                              <option value="">Keine Zuweisung</option>
+                              {mediaItems.map(m => (
+                                <option key={m.id} value={m.id}>{m.filename}</option>
+                              ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-gray-500">
+                              <ChevronDown size={16} />
+                            </div>
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
