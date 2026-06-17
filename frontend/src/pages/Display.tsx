@@ -18,8 +18,16 @@ export default function Display() {
       try {
         const res = await fetch(`/api/devices/${deviceId}/media`);
         if (res.ok) {
-          const data = await res.json();
-          setMedia(data);
+          if (res.status === 204) {
+            setMedia(null);
+          } else {
+            const text = await res.text();
+            if (!text) {
+              setMedia(null);
+            } else {
+              setMedia(JSON.parse(text));
+            }
+          }
         } else if (res.status === 404) {
           console.warn('Device not found. Re-registering.');
           // @ts-ignore
