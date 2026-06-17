@@ -101,10 +101,11 @@ export default function App() {
     let isMounted = true;
     let reconnectTimeout: any;
 
-    const connectWs = () => {
+    const connectWs = async () => {
       if (!isMounted) return;
       
-      ws = new WebSocket(`ws://${ip}:3000/api/ws`);
+      const apiPort = (await AsyncStorage.getItem('SIGNAGE_API_PORT')) || '3000';
+      ws = new WebSocket(`ws://${ip}:${apiPort}/api/ws`);
 
       ws.onopen = () => {
         console.log('WS connected');
@@ -179,7 +180,9 @@ export default function App() {
       socket.on('message', async (msg: any, rinfo: any) => {
         const data = msg.toString();
         if (data.startsWith('SIGNAGE_DISCOVERY:PORT:')) {
-          const port = data.split(':')[2];
+          const parts = data.split(':');
+          const port = parts[2];
+          const apiPort = parts[3] === 'API' && parts[4] ? parts[4] : '3000';
           
           // Get or create UUID
           let deviceUuid = await AsyncStorage.getItem('DEVICE_UUID');
@@ -189,7 +192,7 @@ export default function App() {
             
             isRegistering = true;
             try {
-              const res = await fetch(`http://${rinfo.address}:3000/api/devices/register`, {
+              const res = await fetch(`http://${rinfo.address}:${apiPort}/api/devices/register`, {
                 method: 'POST'
               });
               const json = await res.json();
@@ -211,6 +214,7 @@ export default function App() {
             setServerUrl(newUrl);
             try {
               await AsyncStorage.setItem('SIGNAGE_SERVER_URL', newUrl);
+              await AsyncStorage.setItem('SIGNAGE_API_PORT', apiPort);
             } catch (e) {}
           }
         }
