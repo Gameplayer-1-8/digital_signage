@@ -126,7 +126,7 @@ export default function Display() {
   const mediaSrc = media.filepath;
 
   return (
-    <div className="w-screen h-screen bg-black overflow-hidden flex items-center justify-center">
+    <div className="w-screen h-screen bg-white overflow-hidden flex items-center justify-center">
       {media.type === 'video' ? (
         <video 
           key={media.id} 
@@ -134,14 +134,14 @@ export default function Display() {
           autoPlay 
           muted 
           loop // Loop the single video infinitely!
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
       ) : (
         <img 
           key={media.id}
           src={mediaSrc} 
           alt={media.filename}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
       )}
     </div>
