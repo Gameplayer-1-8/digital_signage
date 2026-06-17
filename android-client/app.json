@@ -3,6 +3,7 @@
     "name": "android-client",
     "slug": "android-client",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
