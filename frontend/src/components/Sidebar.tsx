@@ -35,8 +35,8 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-gray-100 text-sm text-gray-500 text-center">
-        &copy; 2026 SignagePro
+      <div className="p-4 border-t border-gray-100 text-sm text-gray-500 text-center font-medium">
+        Made by Maximilian von Beck
       </div>
     </div>
   );
