@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Linking, Image } from 'react-native';
 import { WebView } from 'react-native-webview';
 import dgram from 'react-native-udp';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -236,6 +236,7 @@ export default function App() {
   if (!serverUrl) {
     return (
       <View style={styles.container}>
+        <Image source={require('./assets/logo.jpg')} style={styles.logo} resizeMode="contain" />
         <ActivityIndicator size="large" color="#0056b3" />
         <Text style={styles.text}>Suche nach Server im Netzwerk...</Text>
       </View>
@@ -269,6 +270,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  logo: {
+    width: 250,
+    height: 100,
+    marginBottom: 30,
   },
   webviewContainer: {
     flex: 1,
