@@ -1,12 +1,91 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
 import { WebView } from 'react-native-webview';
 import dgram from 'react-native-udp';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+
+type GithubReleaseAsset = {
+  name: string;
+  browser_download_url: string;
+};
+
+type GithubRelease = {
+  tag_name: string;
+  assets?: GithubReleaseAsset[];
+};
+
+const UPDATE_API_URL = 'https://api.github.com/repos/Gameplayer-1-8/digital_signage/releases/latest';
+const CURRENT_APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
+
+function normalizeVersion(version: string) {
+  return version.replace(/^v/i, '').trim();
+}
+
+function isVersionNewer(currentVersion: string, releaseVersion: string) {
+  const current = normalizeVersion(currentVersion).split('.').map((part) => Number.parseInt(part, 10) || 0);
+  const next = normalizeVersion(releaseVersion).split('.').map((part) => Number.parseInt(part, 10) || 0);
+  const maxLength = Math.max(current.length, next.length);
+
+  for (let i = 0; i < maxLength; i += 1) {
+    const currentPart = current[i] ?? 0;
+    const nextPart = next[i] ?? 0;
+    if (nextPart > currentPart) return true;
+    if (nextPart < currentPart) return false;
+  }
+
+  return false;
+}
 
 export default function App() {
   const [serverUrl, setServerUrl] = useState<string | null>(null);
+  const [updateDownloadUrl, setUpdateDownloadUrl] = useState<string | null>(null);
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const webviewRef = useRef<WebView>(null);
+
+  const downloadLatestUpdate = async (downloadUrl: string) => {
+    try {
+      await Linking.openURL(downloadUrl);
+    } catch (err) {
+      console.error('Unable to open release URL', err);
+      setUpdateError('Update verfügbar, aber Download-Link konnte nicht geöffnet werden.');
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkGithubReleaseUpdate = async () => {
+      try {
+        const response = await fetch(UPDATE_API_URL, {
+          headers: { Accept: 'application/vnd.github+json' }
+        });
+        if (!response.ok) return;
+
+        const release = (await response.json()) as GithubRelease;
+        const releaseVersion = normalizeVersion(release.tag_name || '');
+        if (!releaseVersion || !isVersionNewer(CURRENT_APP_VERSION, releaseVersion)) return;
+
+        const apkAsset = release.assets?.find((asset) => asset.name.endsWith('.apk'));
+        if (!apkAsset?.browser_download_url || !isMounted) return;
+
+        setUpdateVersion(releaseVersion);
+        setUpdateDownloadUrl(apkAsset.browser_download_url);
+        await downloadLatestUpdate(apkAsset.browser_download_url);
+      } catch (err) {
+        if (isMounted) {
+          console.error('Update check failed', err);
+        }
+      }
+    };
+
+    checkGithubReleaseUpdate();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!serverUrl) return;
@@ -165,6 +244,15 @@ export default function App() {
 
   return (
     <View style={styles.webviewContainer}>
+      {updateDownloadUrl && (
+        <View style={styles.updateBanner}>
+          <Text style={styles.updateTitle}>Neue App-Version verfügbar ({updateVersion})</Text>
+          <TouchableOpacity onPress={() => downloadLatestUpdate(updateDownloadUrl)} style={styles.updateButton}>
+            <Text style={styles.updateButtonText}>Update jetzt laden</Text>
+          </TouchableOpacity>
+          {updateError ? <Text style={styles.updateErrorText}>{updateError}</Text> : null}
+        </View>
+      )}
       <WebView 
         ref={webviewRef}
         source={{ uri: serverUrl }} 
@@ -190,5 +278,36 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: '#333',
-  }
+  },
+  updateBanner: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    zIndex: 9999,
+    backgroundColor: '#1f2937',
+    borderRadius: 8,
+    padding: 12,
+    gap: 8
+  },
+  updateTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600'
+  },
+  updateButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignSelf: 'flex-start'
+  },
+  updateButtonText: {
+    color: '#fff',
+    fontWeight: '600'
+  },
+  updateErrorText: {
+    color: '#fca5a5',
+    fontSize: 12
+  },
 });
