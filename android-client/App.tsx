@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useKeepAwake } from 'expo-keep-awake';
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
+import { getContentUriAsync } from 'expo-file-system/legacy';
 import * as IntentLauncher from 'expo-intent-launcher';
 import dgram from 'react-native-udp';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -61,36 +62,27 @@ export default function App() {
       setDownloadProgress(0);
       setUpdateError(null);
 
-      const fileUri = FileSystem.cacheDirectory + 'update.apk';
+      // Reference to the APK file in cache directory
+      const apkFile = new File(Paths.cache, 'update.apk');
 
       // Delete old APK if it exists
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      if (fileInfo.exists) {
-        await FileSystem.deleteAsync(fileUri);
+      if (apkFile.exists) {
+        apkFile.delete();
       }
 
-      // Download APK with progress tracking
-      const downloadResumable = FileSystem.createDownloadResumable(
-        downloadUrl,
-        fileUri,
-        {},
-        (progress) => {
-          const percent = progress.totalBytesExpectedToWrite > 0
-            ? progress.totalBytesWritten / progress.totalBytesExpectedToWrite
-            : 0;
-          setDownloadProgress(percent);
-        }
-      );
+      // Download APK to cache directory
+      const downloadedFile = await File.downloadFileAsync(downloadUrl, apkFile);
 
-      const result = await downloadResumable.downloadAsync();
-      if (!result?.uri) {
+      if (!downloadedFile || !downloadedFile.exists) {
         throw new Error('Download fehlgeschlagen');
       }
 
+      setDownloadProgress(1);
       setUpdateStatus('installing');
 
       // Convert file:// URI to content:// URI (required for Android 7+)
-      const contentUri = await FileSystem.getContentUriAsync(result.uri);
+      // getContentUriAsync is still needed from legacy API for this
+      const contentUri = await getContentUriAsync(downloadedFile.uri);
 
       // Launch Android package installer
       await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
