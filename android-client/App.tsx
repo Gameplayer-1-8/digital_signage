@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Linking, Image } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useKeepAwake } from 'expo-keep-awake';
 import dgram from 'react-native-udp';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -38,6 +39,9 @@ function isVersionNewer(currentVersion: string, releaseVersion: string) {
 }
 
 export default function App() {
+  // Prevent the screen from going to sleep - essential for digital signage
+  useKeepAwake();
+
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [updateDownloadUrl, setUpdateDownloadUrl] = useState<string | null>(null);
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
