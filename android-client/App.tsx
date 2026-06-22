@@ -22,7 +22,7 @@ type UpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'install
 
 const UPDATE_API_URL = 'https://api.github.com/repos/Gameplayer-1-8/digital_signage/releases/latest';
 const CURRENT_APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
-const UPDATE_CHECK_INTERVAL = 30 * 60 * 1000; // Check every 30 minutes
+const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // Check every 60 minutes
 
 function normalizeVersion(version: string) {
   return version.replace(/^v/i, '').trim();
