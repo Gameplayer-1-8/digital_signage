@@ -27,7 +27,7 @@ const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // Check every 60 minutes
 
 function normalizeVersion(version: string) {
   return version.replace(/^v/i, '').trim();
-}
+} 
 
 function isVersionNewer(currentVersion: string, releaseVersion: string) {
   const current = normalizeVersion(currentVersion).split('.').map((part) => Number.parseInt(part, 10) || 0);

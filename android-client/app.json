@@ -2,7 +2,7 @@
   "expo": {
     "name": "Holick Bildschirm",
     "slug": "android-client",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "runtimeVersion": "1.0.3",
     "orientation": "default",
     "icon": "./assets/icon.jpg",
