@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Linking, Image } from 'react-native';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useKeepAwake } from 'expo-keep-awake';
+import * as FileSystem from 'expo-file-system';
+import * as IntentLauncher from 'expo-intent-launcher';
 import dgram from 'react-native-udp';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -16,8 +18,11 @@ type GithubRelease = {
   assets?: GithubReleaseAsset[];
 };
 
+type UpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'installing' | 'error';
+
 const UPDATE_API_URL = 'https://api.github.com/repos/Gameplayer-1-8/digital_signage/releases/latest';
 const CURRENT_APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
+const UPDATE_CHECK_INTERVAL = 30 * 60 * 1000; // Check every 30 minutes
 
 function normalizeVersion(version: string) {
   return version.replace(/^v/i, '').trim();
@@ -43,53 +48,122 @@ export default function App() {
   useKeepAwake();
 
   const [serverUrl, setServerUrl] = useState<string | null>(null);
-  const [updateDownloadUrl, setUpdateDownloadUrl] = useState<string | null>(null);
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const webviewRef = useRef<WebView>(null);
 
-  const downloadLatestUpdate = async (downloadUrl: string) => {
+  // Download APK directly and trigger Android package installer
+  const downloadAndInstallUpdate = useCallback(async (downloadUrl: string) => {
     try {
-      await Linking.openURL(downloadUrl);
-    } catch (err) {
-      console.error('Unable to open release URL', err);
-      setUpdateError('Update verfügbar, aber Download-Link konnte nicht geöffnet werden.');
-    }
-  };
+      setUpdateStatus('downloading');
+      setDownloadProgress(0);
+      setUpdateError(null);
 
+      const fileUri = FileSystem.cacheDirectory + 'update.apk';
+
+      // Delete old APK if it exists
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      if (fileInfo.exists) {
+        await FileSystem.deleteAsync(fileUri);
+      }
+
+      // Download APK with progress tracking
+      const downloadResumable = FileSystem.createDownloadResumable(
+        downloadUrl,
+        fileUri,
+        {},
+        (progress) => {
+          const percent = progress.totalBytesExpectedToWrite > 0
+            ? progress.totalBytesWritten / progress.totalBytesExpectedToWrite
+            : 0;
+          setDownloadProgress(percent);
+        }
+      );
+
+      const result = await downloadResumable.downloadAsync();
+      if (!result?.uri) {
+        throw new Error('Download fehlgeschlagen');
+      }
+
+      setUpdateStatus('installing');
+
+      // Convert file:// URI to content:// URI (required for Android 7+)
+      const contentUri = await FileSystem.getContentUriAsync(result.uri);
+
+      // Launch Android package installer
+      await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+        data: contentUri,
+        flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+        type: 'application/vnd.android.package-archive',
+      });
+
+      // If we get here, the installer was shown. Reset status.
+      setUpdateStatus('idle');
+    } catch (err) {
+      console.error('Update failed:', err);
+      setUpdateError(`Update fehlgeschlagen: ${(err as Error).message}`);
+      setUpdateStatus('error');
+    }
+  }, []);
+
+  // Check GitHub for new releases - runs on mount and every 30 minutes
   useEffect(() => {
     let isMounted = true;
+    let checkInterval: ReturnType<typeof setInterval>;
 
     const checkGithubReleaseUpdate = async () => {
+      if (!isMounted) return;
+
       try {
+        setUpdateStatus('checking');
+
         const response = await fetch(UPDATE_API_URL, {
           headers: { Accept: 'application/vnd.github+json' }
         });
-        if (!response.ok) return;
+        if (!response.ok) {
+          setUpdateStatus('idle');
+          return;
+        }
 
         const release = (await response.json()) as GithubRelease;
         const releaseVersion = normalizeVersion(release.tag_name || '');
-        if (!releaseVersion || !isVersionNewer(CURRENT_APP_VERSION, releaseVersion)) return;
+
+        if (!releaseVersion || !isVersionNewer(CURRENT_APP_VERSION, releaseVersion)) {
+          if (isMounted) setUpdateStatus('idle');
+          return;
+        }
 
         const apkAsset = release.assets?.find((asset) => asset.name.endsWith('.apk'));
-        if (!apkAsset?.browser_download_url || !isMounted) return;
+        if (!apkAsset?.browser_download_url || !isMounted) {
+          setUpdateStatus('idle');
+          return;
+        }
 
         setUpdateVersion(releaseVersion);
-        setUpdateDownloadUrl(apkAsset.browser_download_url);
-        await downloadLatestUpdate(apkAsset.browser_download_url);
+        setUpdateStatus('available');
+
+        // Auto-download and install on Fire TV (no user interaction needed for download)
+        await downloadAndInstallUpdate(apkAsset.browser_download_url);
       } catch (err) {
         if (isMounted) {
           console.error('Update check failed', err);
+          setUpdateStatus('idle'); // Silent fail, will retry later
         }
       }
     };
 
     checkGithubReleaseUpdate();
 
+    // Periodic update check
+    checkInterval = setInterval(checkGithubReleaseUpdate, UPDATE_CHECK_INTERVAL);
+
     return () => {
       isMounted = false;
+      clearInterval(checkInterval);
     };
-  }, []);
+  }, [downloadAndInstallUpdate]);
 
   useEffect(() => {
     if (!serverUrl) return;
@@ -245,6 +319,46 @@ export default function App() {
     };
   }, []);
 
+  // Render update banner based on current update status
+  const renderUpdateBanner = () => {
+    if (updateStatus === 'idle' || updateStatus === 'checking') return null;
+
+    return (
+      <View style={styles.updateBanner}>
+        {updateStatus === 'available' && (
+          <>
+            <Text style={styles.updateTitle}>Neue Version verfügbar ({updateVersion})</Text>
+            <Text style={styles.updateSubtext}>Download wird gestartet...</Text>
+          </>
+        )}
+
+        {updateStatus === 'downloading' && (
+          <>
+            <Text style={styles.updateTitle}>Update wird heruntergeladen... {Math.round(downloadProgress * 100)}%</Text>
+            <View style={styles.progressBarBackground}>
+              <View style={[styles.progressBarFill, { width: `${Math.round(downloadProgress * 100)}%` }]} />
+            </View>
+          </>
+        )}
+
+        {updateStatus === 'installing' && (
+          <>
+            <Text style={styles.updateTitle}>Update wird installiert...</Text>
+            <ActivityIndicator size="small" color="#60a5fa" />
+          </>
+        )}
+
+        {updateStatus === 'error' && (
+          <>
+            <Text style={styles.updateTitle}>Update fehlgeschlagen</Text>
+            {updateError && <Text style={styles.updateErrorText}>{updateError}</Text>}
+            <Text style={styles.updateSubtext}>Nächster Versuch in 30 Minuten</Text>
+          </>
+        )}
+      </View>
+    );
+  };
+
   if (!serverUrl) {
     return (
       <View style={styles.container}>
@@ -257,15 +371,7 @@ export default function App() {
 
   return (
     <View style={styles.webviewContainer}>
-      {updateDownloadUrl && (
-        <View style={styles.updateBanner}>
-          <Text style={styles.updateTitle}>Neue App-Version verfügbar ({updateVersion})</Text>
-          <TouchableOpacity onPress={() => downloadLatestUpdate(updateDownloadUrl)} style={styles.updateButton}>
-            <Text style={styles.updateButtonText}>Update jetzt laden</Text>
-          </TouchableOpacity>
-          {updateError ? <Text style={styles.updateErrorText}>{updateError}</Text> : null}
-        </View>
-      )}
+      {renderUpdateBanner()}
       <WebView 
         ref={webviewRef}
         source={{ uri: serverUrl }} 
@@ -316,26 +422,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f2937',
     borderRadius: 8,
     padding: 12,
-    gap: 8
+    gap: 8,
   },
   updateTitle: {
     color: '#fff',
     fontSize: 14,
-    fontWeight: '600'
+    fontWeight: '600',
   },
-  updateButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    alignSelf: 'flex-start'
-  },
-  updateButtonText: {
-    color: '#fff',
-    fontWeight: '600'
+  updateSubtext: {
+    color: '#9ca3af',
+    fontSize: 12,
   },
   updateErrorText: {
     color: '#fca5a5',
-    fontSize: 12
+    fontSize: 12,
+  },
+  progressBarBackground: {
+    height: 6,
+    backgroundColor: '#374151',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#2563eb',
+    borderRadius: 3,
   },
 });

@@ -22,7 +22,11 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.androidclient",
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "android.permission.REQUEST_INSTALL_PACKAGES",
+        "android.permission.WAKE_LOCK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
